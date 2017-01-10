@@ -1,21 +1,44 @@
 from django.shortcuts import render
-
+from config import Config
 # Create your views here.
 from django.http import HttpResponse
 import gspread
 
+
+from oauth2client.service_account import ServiceAccountCredentials
+
+
 def index(request):
-	return HttpResponse("<h1>Hello</h1>")
-    #return HttpResponse("Hello, world. You're at the polls index.")
+	#HttpResponse("<h1>Hello</h1>")
+	return listStudents()
+def Authenticate():
+	scope = ['https://spreadsheets.google.com/feeds']
+    credentials = Config["credentials"]
+    gc = gspread.authorize(credentials)
+    return gc
 
+def listPeriods():
 
-def listStudents():
-	gc = gspread.authorize(credentials)
+def listStudents(period):
+ 
+    
 
-	# Open a worksheet from spreadsheet with one shot
-	wks = gc.open("Where is the money Lebowski?").sheet1
+    wks = gc.open("test").sheet1
+    
+    students = wks.row_values(1)
+    html = "<div id='students'>"
 
-	wks.update_acell('B2', "it's down there somewhere, let me take another look.")
+    students = students[2:]#clip header
+    for student in students:
+    	html += "<h2>"+student+"</h2>"
+    html += "</div>"
 
-	# Fetch a cell range
-	cell_list = wks.range('A1:B7')
+    return HttpResponse(html)
+     
+    #gc = gspread.authorize(Config["credentials"])
+	# You can open a spreadsheet by its title as it appears in Google Doc
+    #sh = gc.open('test') # <-- Look ma, no keys!
+    #sh.worksheets()
+    #sht1 = gc.open_by_key('1incg6CDgZOyzwynSSvtG3v8oswgteG6wW3vmD6FwO6w')
+    #1incg6CDgZOyzwynSSvtG3v8oswgteG6wW3vmD6FwO6w/
+    
