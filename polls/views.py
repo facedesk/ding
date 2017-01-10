@@ -10,20 +10,29 @@ from oauth2client.service_account import ServiceAccountCredentials
 
 def index(request):
 	#HttpResponse("<h1>Hello</h1>")
-	return listStudents()
-def Authenticate():
-	scope = ['https://spreadsheets.google.com/feeds']
+	#listStudents("test","1")
+	#listPeriods("test")
+	
+def authenticate():
+    scope = Config["scope"]
     credentials = Config["credentials"]
     gc = gspread.authorize(credentials)
     return gc
+def listTerms():
 
-def listPeriods():
+def listPeriods(term):
+    gc = authenticate()
+    sheets = gc.open(term)
+    periods = sheets.worksheets()
+    html = "<div id = 'periods'>"
+    for period in periods:
+        html += "<h2>"+period.title+"</h2>"
+    html += "</div>"
+    return HttpResponse(html)
+def listStudents(term,period):
+    gc = authenticate()
 
-def listStudents(period):
- 
-    
-
-    wks = gc.open("test").sheet1
+    wks = gc.open(term).worksheet(period)
     
     students = wks.row_values(1)
     html = "<div id='students'>"
