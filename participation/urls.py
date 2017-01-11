@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^listTerms', views.listTerms),
     url(r'^listPeriods', views.listPeriods),
     url(r'^listStudents', views.listStudents),
+    url(r'^dingStudent', views.dingStudent),
 ]
