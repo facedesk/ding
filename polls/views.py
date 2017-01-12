@@ -1,6 +1,8 @@
 from django.shortcuts import render
 from config import Config
 from django.http import HttpResponse
+from django.shortcuts import redirect
+
 import gspread
 import datetime,calendar
 from django.views.decorators.csrf import csrf_exempt
@@ -11,12 +13,35 @@ def _wrapWithPost(value,route,PSVExtraValues=""):
     if PSVExtraValues!="":
        PSVExtraValues= "|" + PSVExtraValues
     html = '''
-    <form id={0} action="{1}" method="post">
-    
-     <input type="submit" name ="{0}{2}"value="{0}">
+   
+    <form class=".col-md-4" id={0} action="{1}" method="post">
+     <input  class="btn btn-primary btn-lg" type="submit" name ="{0}{2}"value="{0}">
     </form>
+    
     '''.format(value,route,PSVExtraValues)
     return html
+
+def _wrapWithTemplate(innerHTML):
+	html ='''
+<html>
+	<head>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script></head>
+<body>
+
+	{0}
+
+	<hr>
+	<hr>
+</body>
+</html>
+	'''
+	return html.format(innerHTML)
 
 @csrf_exempt
 def index(request):
@@ -44,7 +69,7 @@ def listTerms(request):
     html += _wrapWithPost(str(currentyear+1)+"Fall",route)
     html += _wrapWithPost(str(currentyear+1)+"Spring",route)
     html += "</div>"
-    return HttpResponse(html)
+    return HttpResponse(_wrapWithTemplate(html))
 
 @csrf_exempt
 def listPeriods(request):
@@ -59,17 +84,25 @@ def listPeriods(request):
     for period in periods:
         html += _wrapWithPost(period.title,"/listStudents",term)
     html += "</div>"
-    return HttpResponse(html)
+    return HttpResponse(_wrapWithTemplate(html))
 
 
 @csrf_exempt   
 def listStudents(request):
-    
-    requestCSV = list(request.POST)[0]
-    requestValues = unicode.split(requestCSV,"|")
-    #requestValues = str.split(list(request.POST)[0],",")
-    term = requestValues[1]
-    period = requestValues[0]
+    term = 0
+    period = ""
+    if(len(list(request.POST))==0):
+        print request.session.get('_old_post')
+        request.POST = request.session.get('_old_post')
+        requestCSV = list(request.POST)[0]
+        requestValues = unicode.split(requestCSV,"|")
+        term = requestValues[1]
+        period = requestValues[2]
+    else:
+        requestCSV = list(request.POST)[0]
+        requestValues = unicode.split(requestCSV,"|")
+        term = requestValues[1]
+        period = requestValues[0]
     CreateNewDay(term,period)
     gc = authenticate()
     wks = gc.open(term).worksheet(period)
@@ -82,7 +115,7 @@ def listStudents(request):
     	    continue
     	html += _wrapWithPost(student,"/dingStudent",term+"|"+period)
     html += "</div>"
-    return HttpResponse(html)
+    return HttpResponse(_wrapWithTemplate(html))
 
 def CreateNewDay(term,period):
     gc = authenticate()
@@ -137,12 +170,11 @@ def dingStudent(request):
 
     studentsGrade = wks.cell(dayCell.row,studentCell.col)
     
-    if(studentsGrade >0):
+    if(studentsGrade.value >0):
         studentsGrade.value = int(studentsGrade.value) - 4
     
     wks.update_cell(studentsGrade.row,studentsGrade.col,studentsGrade.value)
 	#update_cell(row, col, val)
 	#print("Found something at R%sC%s" % (cell.row, cell.col))
-	HttpResponseRedirect('/profile/{0}/').format(username)
-
-    return 
+    request.session['_old_post'] = request.POST
+    return redirect('/listStudents/')
