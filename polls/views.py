@@ -13,10 +13,11 @@ def _wrapWithPost(value,route,PSVExtraValues=""):
     if PSVExtraValues!="":
        PSVExtraValues= "|" + PSVExtraValues
     html = '''
-   
+    
     <form class=".col-md-4" id={0} action="{1}" method="post">
      <input  class="btn btn-primary btn-lg" type="submit" name ="{0}{2}"value="{0}">
     </form>
+    
     
     '''.format(value,route,PSVExtraValues)
     return html
