@@ -63,12 +63,13 @@ def listTerms(request):
     html = "<div id='terms'>"
     #html += str(request.POST)
     route="/listPeriods"
-    html += _wrapWithPost(str(currentyear-1)+"Fall",route)
     html += _wrapWithPost(str(currentyear-1)+"Spring",route)
-    html += _wrapWithPost(str(currentyear)+"Fall",route)
+    html += _wrapWithPost(str(currentyear-1)+"Fall",route)
     html += _wrapWithPost(str(currentyear)+"Spring",route)
-    html += _wrapWithPost(str(currentyear+1)+"Fall",route)
+    html += _wrapWithPost(str(currentyear)+"Fall",route)
     html += _wrapWithPost(str(currentyear+1)+"Spring",route)
+    html += _wrapWithPost(str(currentyear+1)+"Fall",route)
+    
     html += "</div>"
     return HttpResponse(_wrapWithTemplate(html))
 
@@ -166,6 +167,7 @@ def dingStudent(request):
     wks = gc.open(term).worksheet(period)
     
     studentCell = wks.find(student)
+    print (str(datetime.date.today()))
     dayCell = wks.find(str(datetime.date.today()))
 
 
